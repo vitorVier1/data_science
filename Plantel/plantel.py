@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from prettytable import PrettyTable
 
 url = "https://www.transfermarkt.com.br/real-madrid-cf/kader/verein/418/saison_id/2023/plus/1"
-team_id = url.split('/')[-1]
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
@@ -36,6 +35,7 @@ for jogador in plantel:
     if len(dados_jogador) >= 8:  # Verifica se existem dados suficientes
         num = dados_jogador[0]
         nome = dados_jogador[1]
+        sobreNome = dados_jogador[2].split()[-1].strip()
         posicao = dados_jogador[3]
         altura = dados_jogador[5]
         pe = dados_jogador[6] if len(dados_jogador) > 7 else "-"  # Podem não haver dados cadastrados
@@ -48,11 +48,16 @@ for jogador in plantel:
         # Ajuste Bug Joselu
         if([img['alt'] for img in nacionalidade_imgs][1] == "Joselu"):
             nacionalidade = ""
+            nome = "Joselu"
+            sobreNome = ""
+        if dados_jogador[0] == "11":
+            nome = "Rodrygo"
+            sobreNome = ""
 
         valor = dados_jogador[8] if len(dados_jogador) > 8 else "-"  # Podem não haver dados cadastrados
         
         # Adicionando dados à tabela
-        table.add_row([num, nome.split()[0] + " " + nome.split()[1], posicao, altura, pe, idade, nacionalidade + nacionalidade2, valor])
+        table.add_row([num, nome.split()[0] + " " + sobreNome, posicao, altura, pe, idade, nacionalidade + nacionalidade2, valor])
 
 # Exibindo tabela
 print(table)
