@@ -45,6 +45,7 @@ for jogador in plantel:
         nacionalidade = ''.join([img['alt'] for img in nacionalidade_imgs][1]) if len(nacionalidade_imgs) < 5 else ''.join([img['alt'] for img in nacionalidade_imgs][1]) + "/"
         nacionalidade2 = ''.join([img['alt'] for img in nacionalidade_imgs][2]) if len(nacionalidade_imgs) > 4 else ''
         
+        # Ajuste Bug Joselu
         if([img['alt'] for img in nacionalidade_imgs][1] == "Joselu"):
             nacionalidade = ""
 
