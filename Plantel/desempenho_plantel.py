@@ -14,7 +14,7 @@ response = requests.get(url, headers = headers)
 
 soup = BeautifulSoup(response.content, "html.parser")
 
-print("Dados de Desempenho da Equipe na Temporada 2023/24")
+print("\nDados de Desempenho da Equipe na Temporada 2023/24\n")
 # Criando tabela
 table = PrettyTable()
 table.field_names = ["N°", "Jogador", "Posição", "No Plantel", "Jogos", "Gols", "Assistencias", "Cartões Amarelos", "Expulsões (Dois Amarelos)", "Cartões Vermelhos", "PPJ", "Minutos Jogados"]
