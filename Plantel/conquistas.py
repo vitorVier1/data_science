@@ -15,6 +15,7 @@ soup = BeautifulSoup(response.content, "html.parser")
 
 print("\nBalanço da Temporada 2023/24\n")
 
+print("Competições")
 # Criando tabela
 table = PrettyTable()
 table.field_names = ["Competição", "Resultado"]
