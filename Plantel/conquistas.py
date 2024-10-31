@@ -49,10 +49,10 @@ for stats in jogos:
     jogos_stats = [td.text.strip() for td in stats.find_all('td') if td.text.strip()]
     
     if len(jogos_stats) >= 4:  # Verifica se existem dados suficientes
-        jogos = jogos_stats[0].split('\n')[0]
-        wins = jogos_stats[1]
-        draws = jogos_stats[2]
-        loses = jogos_stats[3]
+        jogos = jogos_stats[0].split('Jogos')[0]
+        wins = jogos_stats[1].split('V')[0]
+        draws = jogos_stats[2].split('E')[0]
+        loses = jogos_stats[3].split('D')[0]
         
         # Adicionando dados à tabela
         table_jogos.add_row([jogos, wins, draws, loses])
