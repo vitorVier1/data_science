@@ -1,7 +1,7 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-from prettytable import PrettyTable
+import pandas as pd
 
 url = "https://www.transfermarkt.com.br/real-madrid-cf/kader/verein/418/saison_id/2023/plus/1"
 
@@ -23,10 +23,7 @@ plantel_madrid = soup.select_one('h2[class="content-box-headline"]').text.split(
 print(plantel_madrid + " 2023/24")
 
 
-# Criando tabela
-table = PrettyTable()
-table.field_names = ["N°", "Jogador", "Posição", "Altura", "Pe", "Idade", "Nacionalidade", "Valor de Mercado"]
-
+jogadores_data = []
 # Coletando dados do plantel
 plantel = soup.select('table[class="items"] tbody tr')
 for jogador in plantel:
@@ -39,13 +36,13 @@ for jogador in plantel:
         posicao = dados_jogador[3]
         altura = dados_jogador[5]
         pe = dados_jogador[6] if len(dados_jogador) > 7 else "-"  # Podem não haver dados cadastrados
-        idade = dados_jogador[4].split()[1]
+        idade = dados_jogador[4]
 
         nacionalidade_imgs = jogador.select('td img[alt]')
         nacionalidade = ''.join([img['alt'] for img in nacionalidade_imgs][1]) if len(nacionalidade_imgs) < 5 else ''.join([img['alt'] for img in nacionalidade_imgs][1]) + "/"
         nacionalidade2 = ''.join([img['alt'] for img in nacionalidade_imgs][2]) if len(nacionalidade_imgs) > 4 else ''
         
-        # Ajuste Bug Joselu
+        # Ajuste Especificos
         if([img['alt'] for img in nacionalidade_imgs][1] == "Joselu"):
             nacionalidade = ""
             nome = "Joselu"
@@ -57,7 +54,10 @@ for jogador in plantel:
         valor = dados_jogador[8] if len(dados_jogador) > 8 else "-"  # Podem não haver dados cadastrados
         
         # Adicionando dados à tabela
-        table.add_row([num, nome.split()[0] + " " + sobreNome, posicao, altura, pe, idade, nacionalidade + nacionalidade2, valor])
+        jogadores_data.append([num,  f"{nome.split()[0]} {sobreNome}",  posicao,  altura,  pe,  idade,  f"{nacionalidade}{nacionalidade2}",  valor])
 
-# Exibindo tabela
-print(table)
+dados_jogador = pd.DataFrame(jogadores_data, columns=["Numero", "Nome", "Posicao", "Altura", "Pe", "Idade", "Nacionalidade", "Valor"])
+
+# Exibindo a tabela
+print("\n\n\nCartões Vermelhos na Temporada 2023/24\n")
+print(dados_jogador.to_string(index=False))

@@ -48,7 +48,9 @@ df_jogadores = df_jogadores.sort_values(by="Gols", ascending=False).reset_index(
 print("\nArtilharia da Temporada 2023/24\n")
 print(df_jogadores.to_string(index=False))
 
+
 print("\n\n----------------------------------------------------------------------------------------------------------------------------------------------------------------")
+
 
 jogadores_data_ass = []
 
@@ -83,7 +85,9 @@ df_jogadores_ass = df_jogadores_ass.sort_values(by="Assistencias", ascending=Fal
 print("\n\n\nMaiores Assistentes da Temporada 2023/24\n")
 print(df_jogadores_ass.to_string(index=False))
 
+
 print("\n\n----------------------------------------------------------------------------------------------------------------------------------------------------------------")
+
 
 jogadores_data_yellow = []
 
@@ -118,7 +122,9 @@ df_jogadores_yellow = df_jogadores_yellow.sort_values(by="Cartões Amarelos", as
 print("\n\n\nCartões Amarelos na Temporada 2023/24\n")
 print(df_jogadores_yellow.to_string(index=False))
 
+
 print("\n\n----------------------------------------------------------------------------------------------------------------------------------------------------------------")
+
 
 jogadores_data_red = []
 
