@@ -2,6 +2,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from prettytable import PrettyTable
+import pandas as pd
 
 url = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/reldata/%262023/plus/1"
 team_id = url.split('/')[-1]
@@ -16,8 +17,7 @@ soup = BeautifulSoup(response.content, "html.parser")
 
 print("\nDados de Desempenho da Equipe na Temporada 2023/24\n")
 # Criando tabela
-table = PrettyTable()
-table.field_names = ["N°", "Jogador", "Posição", "No Plantel", "Jogos", "Gols", "Assistencias", "Cartões Amarelos", "Expulsões (Dois Amarelos)", "Cartões Vermelhos", "PPJ", "Minutos Jogados"]
+jogadores_data = []
 
 # Coletando dados do plantel
 plantel = soup.select('table[class="items"] tbody tr')
@@ -47,7 +47,10 @@ for jogador in plantel:
             sobreNome = ""
         
         # Adicionando dados à tabela
-        table.add_row([num, nome.split()[0] + " " + sobreNome, posicao, noPlantel, jogos, gols, ass, amarelos, amarelos2, vermelhos, ppj, minJogados])
+        jogadores_data.append([num,  f"{nome.split()[0]} {sobreNome}",  posicao, noPlantel, jogos, gols, ass, amarelos, amarelos2, vermelhos, ppj, minJogados])
 
-# Exibindo tabela
-print(table)
+dados_jogador = pd.DataFrame(jogadores_data, columns=["Numero", "Nome", "Posicao", "No Plantel", "Jogos", "Gols", "Assistencias", "Amarelos", "Expulsões (2 Amarelos)", "Vermelhos", "PPJ", "Minutos Jogados"])
+
+# Exibindo a tabela
+print("\n\n\nEstatisticas Gerais do Plantel na Temporada 2023/24\n")
+print(dados_jogador.to_string(index=False))

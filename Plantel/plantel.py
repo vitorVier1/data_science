@@ -36,7 +36,7 @@ for jogador in plantel:
         posicao = dados_jogador[3]
         altura = dados_jogador[5]
         pe = dados_jogador[6] if len(dados_jogador) > 7 else "-"  # Podem não haver dados cadastrados
-        idade = dados_jogador[4]
+        idade = dados_jogador[4].split()[1]
 
         nacionalidade_imgs = jogador.select('td img[alt]')
         nacionalidade = ''.join([img['alt'] for img in nacionalidade_imgs][1]) if len(nacionalidade_imgs) < 5 else ''.join([img['alt'] for img in nacionalidade_imgs][1]) + "/"
@@ -59,5 +59,5 @@ for jogador in plantel:
 dados_jogador = pd.DataFrame(jogadores_data, columns=["Numero", "Nome", "Posicao", "Altura", "Pe", "Idade", "Nacionalidade", "Valor"])
 
 # Exibindo a tabela
-print("\n\n\nCartões Vermelhos na Temporada 2023/24\n")
+print("\n\n\nPlantel Real Madrid - Temporada 2023/24\n")
 print(dados_jogador.to_string(index=False))
