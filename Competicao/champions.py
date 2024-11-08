@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-url = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/plus/1?reldata=%262023"
+url = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/plus/1?reldata=CL%262023"
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
@@ -43,7 +43,7 @@ df_jogadores = pd.DataFrame(jogadores_data, columns=["Jogador", "Posição", "Jo
 df_jogadores = df_jogadores.sort_values(by="Gols", ascending=False).reset_index(drop=True)
 
 # Exibindo a tabela
-print("\nArtilharia da Temporada 2023/24\n")
+print("\nArtilharia do Clube - Liga dos Campeões da Europa 2023/24\n")
 print(df_jogadores.to_string(index=False))
 
 
@@ -80,7 +80,7 @@ df_jogadores_ass = pd.DataFrame(jogadores_data_ass, columns=["Jogador", "Posiç�
 df_jogadores_ass = df_jogadores_ass.sort_values(by="Assistencias", ascending=False).reset_index(drop=True)
 
 # Exibindo a tabela
-print("\n\n\nMaiores Assistentes da Temporada 2023/24\n")
+print("\n\n\nMaiores Assistentes do Clube - Liga dos Campeões da Europa 2023/24\n")
 print(df_jogadores_ass.to_string(index=False))
 
 
@@ -117,7 +117,7 @@ df_jogadores_yellow = pd.DataFrame(jogadores_data_yellow, columns=["Jogador", "P
 df_jogadores_yellow = df_jogadores_yellow.sort_values(by="Cartões Amarelos", ascending=False).reset_index(drop=True)
 
 # Exibindo a tabela
-print("\n\n\nCartões Amarelos na Temporada 2023/24\n")
+print("\n\n\nCartões Amarelos do Clube - Liga dos Campeões da Europa 2023/24\n")
 print(df_jogadores_yellow.to_string(index=False))
 
 
@@ -154,5 +154,5 @@ df_jogadores_red = pd.DataFrame(jogadores_data_red, columns=["Jogador", "Posiç�
 df_jogadores_red = df_jogadores_red.sort_values(by="Cartões Vermelhos", ascending=False).reset_index(drop=True)
 
 # Exibindo a tabela
-print("\n\n\nCartões Vermelhos na Temporada 2023/24\n")
+print("\n\n\nCartões Vermelhos do Clube - Liga dos Campeões da Europa 2023/24\n")
 print(df_jogadores_red.to_string(index=False))

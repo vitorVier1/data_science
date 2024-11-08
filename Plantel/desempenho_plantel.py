@@ -1,7 +1,5 @@
-import re
 import requests
 from bs4 import BeautifulSoup
-from prettytable import PrettyTable
 import pandas as pd
 
 url = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/reldata/%262023/plus/1"

@@ -1,6 +1,6 @@
-import re
 import requests
 from bs4 import BeautifulSoup
+import pandas as pd
 from prettytable import PrettyTable
 
 url = "https://www.transfermarkt.com.br/real-madrid-cf/transferrekorde/verein/418/saison_id/2023/pos//detailpos/0/w_s//altersklasse//plus/1"
@@ -18,8 +18,10 @@ print("\nTransferências da Temporada 2023/24\n")
 
 print("\nENTRADAS")
 # Criando tabela
-table_entradas = PrettyTable()
-table_entradas.field_names = ["#", "Jogadores", "Posição", "Idade", "Nacionalidade", "Origem", "Valor de Mercado (na época)", "Valor Pago"]
+# table_entradas = PrettyTable()
+# table_entradas.field_names = ["#", "Jogadores", "Posição", "Idade", "Nacionalidade", "Origem", "Valor de Mercado (na época)", "Valor Pago"]
+
+jogadores_entrada = []
 
 jogadores_in = soup.select('table[class="items"] tbody tr')
 for jogador in jogadores_in:
@@ -40,10 +42,13 @@ for jogador in jogadores_in:
         valorPago = dados_jogador[10]
         
         # Adicionando dados à tabela
-        table_entradas.add_row([num, nome, posicao, idade, nacionalidade + nacionalidade2, origem, valorJogador, valorPago])
+        jogadores_entrada.append([nome, posicao, idade, f"{nacionalidade} {nacionalidade2}", origem, valorJogador, valorPago])
 
-# Exibindo tabela
-print(table_entradas)
+# Criando o DataFrame para ordenar
+df_jogadores = pd.DataFrame(jogadores_entrada, columns=["Jogador", "Posição", "Idade", "Nacionalidade", "Origem", "Valor da Época", "Valor Pago"])
+
+# Exibindo a tabela
+print(df_jogadores.to_string(index=False))
 
 print('\n-------------------------------------------------------------------------------------------------------------------------------------------------------------\n')
 
@@ -52,8 +57,10 @@ urlOut = "https://www.transfermarkt.com.br/real-madrid-cf/rekordabgaenge/verein/
 responseOut = requests.get(urlOut, headers = headers)
 soupOut = BeautifulSoup(responseOut.content, "html.parser")
 
-table_saidas = PrettyTable()
-table_saidas.field_names = ["#", "Jogadores", "Posição", "Idade", "Nacionalidade", "Destino", "Valor de Mercado (na época)", "Valor Pago"]
+# table_saidas = PrettyTable()
+# table_saidas.field_names = ["#", "Jogadores", "Posição", "Idade", "Nacionalidade", "Destino", "Valor de Mercado (na época)", "Valor Pago"]
+
+jogadores_saida = []
 
 jogadores_out = soupOut.select('table[class="items"] tbody tr')
 for jogador in jogadores_out:
@@ -74,7 +81,10 @@ for jogador in jogadores_out:
         valorPago = dados_jogador[10]
         
         # Adicionando dados à tabela
-        table_saidas.add_row([num, nome, posicao, idade, nacionalidade + nacionalidade2, origem, valorJogador, valorPago])
+        jogadores_entrada.append([nome, posicao, idade, f"{nacionalidade} {nacionalidade2}", origem, valorJogador, valorPago])
 
-# Exibindo tabela
-print(table_saidas)
+# Criando o DataFrame para ordenar
+df_jogadores = pd.DataFrame(jogadores_entrada, columns=["Jogador", "Posição", "Idade", "Nacionalidade", "Origem", "Valor da Época", "Valor Pago"])
+
+# Exibindo a tabela
+print(df_jogadores.to_string(index=False))
