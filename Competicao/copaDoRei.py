@@ -93,3 +93,4 @@ estatisticas.exibir_tabela("Cartões Amarelos do Clube - Copa do Rei 2023/24", "
 
 estatisticas.processar_dados(tipo="vermelhos")
 estatisticas.exibir_tabela("Cartões Vermelhos do Clube - Copa do Rei 2023/24", "Cartões Vermelhos")
+
