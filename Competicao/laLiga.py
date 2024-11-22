@@ -2,157 +2,94 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-url = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/plus/1?reldata=ES1%262023"
 
+class EstatisticasLaLiga:
+    def __init__(self, url, headers):
+        self.url = url
+        self.headers = headers
+        self.plantel = []
+        self.jogadores_data = []
+
+    def obter_dados(self):
+        """
+        Faz a requisição ao site e obtém os dados da página HTML.
+        """
+        response = requests.get(self.url, headers=self.headers)
+        soup = BeautifulSoup(response.content, "html.parser")
+        self.plantel = soup.select('table[class="items"] tbody tr')
+
+    def processar_dados(self, tipo="gols"):
+        """
+        Processa os dados do plantel com base no tipo de estatística escolhida.
+        :param tipo: Tipo de estatística ("gols", "assistencias", "amarelos", "vermelhos").
+        """
+        self.jogadores_data = []
+
+        for jogador in self.plantel:
+            dados_jogador = [td.text.strip() for td in jogador.find_all('td') if td.text.strip()]
+
+            if len(dados_jogador) >= 12:
+                nome = dados_jogador[1]
+                sobreNome = dados_jogador[2].split()[-1].strip()
+                posicao = dados_jogador[3]
+                jogos = int(dados_jogador[6]) if dados_jogador[6].isdigit() else 0
+
+                if tipo == "gols":
+                    estatistica = int(dados_jogador[7].split()[0]) if dados_jogador[7].split()[0].isdigit() else 0
+                elif tipo == "assistencias":
+                    estatistica = int(dados_jogador[8].split()[0]) if dados_jogador[8].split()[0].isdigit() else 0
+                elif tipo == "amarelos":
+                    estatistica = int(dados_jogador[9].split()[0]) if dados_jogador[9].split()[0].isdigit() else 0
+                elif tipo == "vermelhos":
+                    estatistica = int(dados_jogador[11].split()[0]) if dados_jogador[11].split()[0].isdigit() else 0
+                else:
+                    estatistica = 0
+
+                # Correções para casos especiais
+                if dados_jogador[0] == "11":
+                    nome = "Rodrygo"
+                    sobreNome = ""
+                if dados_jogador[1] == "JoseluJoseluCentroavante":
+                    nome = "Joselu"
+                    sobreNome = ""
+
+                self.jogadores_data.append([f"{nome.split()[0]} {sobreNome}", posicao, jogos, estatistica])
+
+    def exibir_tabela(self, titulo, coluna_estatistica):
+        """
+        Exibe os dados processados em formato tabular.
+        :param titulo: Título da tabela.
+        :param coluna_estatistica: Nome da coluna que contém a estatística.
+        """
+        df = pd.DataFrame(self.jogadores_data, columns=["Jogador", "Posição", "Jogos", coluna_estatistica])
+        df = df.sort_values(by=coluna_estatistica, ascending=False).reset_index(drop=True)
+
+        print(f"\n{titulo}\n")
+        print(df.to_string(index=False))
+        print("\n" + "-" * 150)
+
+
+# URL e headers para requisição
+url = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/plus/1?reldata=ES1%262023"
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 }
 
-response = requests.get(url, headers = headers)
+# Inicializando a classe
+estatisticas = EstatisticasLaLiga(url, headers)
 
-soup = BeautifulSoup(response.content, "html.parser")
+# Obter dados da página
+estatisticas.obter_dados()
 
-jogadores_data = []
+# Processar e exibir tabelas
+estatisticas.processar_dados(tipo="gols")
+estatisticas.exibir_tabela("Artilharia do Clube - La Liga 2023/24", "Gols")
 
-# Coletando dados do plantel
-plantel = soup.select('table[class="items"] tbody tr')
-for jogador in plantel:
-    dados_jogador = [td.text.strip() for td in jogador.find_all('td') if td.text.strip()]
-    
-    if len(dados_jogador) >= 12:  # Verifica se existem dados suficientes
-        nome = dados_jogador[1]
-        sobreNome = dados_jogador[2].split()[-1].strip()
-        posicao = dados_jogador[3]
+estatisticas.processar_dados(tipo="assistencias")
+estatisticas.exibir_tabela("Maiores Assistentes do Clube - La Liga 2023/24", "Assistencias")
 
-        jogos = int(dados_jogador[6]) if dados_jogador[6].isdigit() else 0
-        gols = int(dados_jogador[7].split()[0]) if dados_jogador[7].split()[0].isdigit() else 0
+estatisticas.processar_dados(tipo="amarelos")
+estatisticas.exibir_tabela("Cartões Amarelos do Clube - La Liga 2023/24", "Cartões Amarelos")
 
-        if dados_jogador[0] == "11":
-            nome = "Rodrygo"
-            sobreNome = ""
-        if dados_jogador[1] == "JoseluJoseluCentroavante":
-            nome = "Joselu"
-            sobreNome = ""
-        
-        jogadores_data.append([f"{nome.split()[0]} {sobreNome}", posicao, jogos, gols])
-
-# Criando o DataFrame para ordenar
-df_jogadores = pd.DataFrame(jogadores_data, columns=["Jogador", "Posição", "Jogos", "Gols"])
-
-# Ordenando por gols em ordem decrescente
-df_jogadores = df_jogadores.sort_values(by="Gols", ascending=False).reset_index(drop=True)
-
-# Exibindo a tabela
-print("\nArtilharia do Clube - La Liga 2023/24\n")
-print(df_jogadores.to_string(index=False))
-
-
-print("\n\n----------------------------------------------------------------------------------------------------------------------------------------------------------------")
-
-
-jogadores_data_ass = []
-
-# Coletando dados do plantel
-for jogador_ass in plantel:
-    dados_jogador = [td.text.strip() for td in jogador_ass.find_all('td') if td.text.strip()]
-    
-    if len(dados_jogador) >= 12:  # Verifica se existem dados suficientes
-        nome = dados_jogador[1]
-        sobreNome = dados_jogador[2].split()[-1].strip()
-        posicao = dados_jogador[3]
-
-        jogos = int(dados_jogador[6]) if dados_jogador[6].isdigit() else 0
-        ass = int(dados_jogador[8].split()[0]) if dados_jogador[8].split()[0].isdigit() else 0
-
-        if dados_jogador[0] == "11":
-            nome = "Rodrygo"
-            sobreNome = ""
-        if dados_jogador[1] == "JoseluJoseluCentroavante":
-            nome = "Joselu"
-            sobreNome = ""
-        
-        jogadores_data_ass.append([f"{nome.split()[0]} {sobreNome}", posicao, jogos, ass])
-
-# Criando o DataFrame para ordenar
-df_jogadores_ass = pd.DataFrame(jogadores_data_ass, columns=["Jogador", "Posição", "Jogos", "Assistencias"])
-
-# Ordenando por ass em ordem decrescente
-df_jogadores_ass = df_jogadores_ass.sort_values(by="Assistencias", ascending=False).reset_index(drop=True)
-
-# Exibindo a tabela
-print("\n\n\nMaiores Assistentes do Clube - La Liga 2023/24\n")
-print(df_jogadores_ass.to_string(index=False))
-
-
-print("\n\n----------------------------------------------------------------------------------------------------------------------------------------------------------------")
-
-
-jogadores_data_yellow = []
-
-# Coletando dados do plantel
-for jogador_yellow in plantel:
-    dados_jogador = [td.text.strip() for td in jogador_yellow.find_all('td') if td.text.strip()]
-    
-    if len(dados_jogador) >= 12:  # Verifica se existem dados suficientes
-        nome = dados_jogador[1]
-        sobreNome = dados_jogador[2].split()[-1].strip()
-        posicao = dados_jogador[3]
-
-        jogos = int(dados_jogador[6]) if dados_jogador[6].isdigit() else 0
-        amarelos = int(dados_jogador[9].split()[0]) if dados_jogador[9].split()[0].isdigit() else 0
-
-        if dados_jogador[0] == "11":
-            nome = "Rodrygo"
-            sobreNome = ""
-        if dados_jogador[1] == "JoseluJoseluCentroavante":
-            nome = "Joselu"
-            sobreNome = ""
-        
-        jogadores_data_yellow.append([f"{nome.split()[0]} {sobreNome}", posicao, jogos, amarelos])
-
-# Criando o DataFrame para ordenar
-df_jogadores_yellow = pd.DataFrame(jogadores_data_yellow, columns=["Jogador", "Posição", "Jogos", "Cartões Amarelos"])
-
-# Ordenando por yellow em ordem decrescente
-df_jogadores_yellow = df_jogadores_yellow.sort_values(by="Cartões Amarelos", ascending=False).reset_index(drop=True)
-
-# Exibindo a tabela
-print("\n\n\nCartões Amarelos do Clube - La Liga 2023/24\n")
-print(df_jogadores_yellow.to_string(index=False))
-
-
-print("\n\n----------------------------------------------------------------------------------------------------------------------------------------------------------------")
-
-
-jogadores_data_red = []
-
-# Coletando dados do plantel
-for jogador_red in plantel:
-    dados_jogador = [td.text.strip() for td in jogador_red.find_all('td') if td.text.strip()]
-    
-    if len(dados_jogador) >= 12:  # Verifica se existem dados suficientes
-        nome = dados_jogador[1]
-        sobreNome = dados_jogador[2].split()[-1].strip()
-        posicao = dados_jogador[3]
-
-        jogos = int(dados_jogador[6]) if dados_jogador[6].isdigit() else 0
-        red = int(dados_jogador[11].split()[0]) if dados_jogador[11].split()[0].isdigit() else 0
-
-        if dados_jogador[0] == "11":
-            nome = "Rodrygo"
-            sobreNome = ""
-        if dados_jogador[1] == "JoseluJoseluCentroavante":
-            nome = "Joselu"
-            sobreNome = ""
-        
-        jogadores_data_red.append([f"{nome.split()[0]} {sobreNome}", posicao, jogos, red])
-
-# Criando o DataFrame para ordenar
-df_jogadores_red = pd.DataFrame(jogadores_data_red, columns=["Jogador", "Posição", "Jogos", "Cartões Vermelhos"])
-
-# Ordenando por red em ordem decrescente
-df_jogadores_red = df_jogadores_red.sort_values(by="Cartões Vermelhos", ascending=False).reset_index(drop=True)
-
-# Exibindo a tabela
-print("\n\n\nCartões Vermelhos do Clube - La Liga 2023/24\n")
-print(df_jogadores_red.to_string(index=False))
+estatisticas.processar_dados(tipo="vermelhos")
+estatisticas.exibir_tabela("Cartões Vermelhos do Clube - La Liga 2023/24", "Cartões Vermelhos")
