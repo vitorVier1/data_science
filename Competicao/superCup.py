@@ -1,95 +1,117 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import sqlite3
+
+class EstatisticasFutebol:
+    def __init__(self, db_name):
+        self.db_name = db_name
+        self.conn = sqlite3.connect(self.db_name)
+        self.cursor = self.conn.cursor()
+        self._criar_tabela()
+
+    def _criar_tabela(self):
+        """Cria a tabela no banco de dados."""
+        self.cursor.execute("""
+        CREATE TABLE IF NOT EXISTS estatisticas (
+            jogador TEXT,
+            posicao TEXT,
+            jogos INTEGER,
+            gols INTEGER,
+            assistencias INTEGER,
+            cartoes_amarelos INTEGER,
+            cartoes_vermelhos INTEGER
+        )
+        """)
+        self.conn.commit()
+
+    def inserir_dados(self, jogadores_data):
+        """Insere os dados dos jogadores no banco."""
+        for jogador in jogadores_data:
+            jogador_nome, posicao, jogos, gols, assistencias, amarelos, vermelhos = jogador
+            self.cursor.execute("""
+                INSERT INTO estatisticas (jogador, posicao, jogos, gols, assistencias, cartoes_amarelos, cartoes_vermelhos)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (jogador_nome, posicao, jogos, gols, assistencias, amarelos, vermelhos))
+        self.conn.commit()
+
+    def consultar_dados(self, campo, ordem="DESC"):
+        """Consulta dados do banco ordenados por um campo específico."""
+        query = f"SELECT jogador, posicao, jogos, {campo} FROM estatisticas ORDER BY {campo} {ordem}"
+        return pd.read_sql_query(query, self.conn)
+
+    def fechar_conexao(self):
+        """Fecha a conexão com o banco de dados."""
+        self.conn.close()
 
 
-class EstatisticasSupercopa:
+class ScraperTransfermarkt:
     def __init__(self, url, headers):
         self.url = url
         self.headers = headers
-        self.plantel = []
-        self.jogadores_data = []
 
-    def obter_dados(self):
-        """
-        Faz a requisição ao site e obtém os dados da página HTML.
-        """
+    def coletar_dados(self):
+        """Realiza o scraping e coleta os dados dos jogadores."""
         response = requests.get(self.url, headers=self.headers)
         soup = BeautifulSoup(response.content, "html.parser")
-        self.plantel = soup.select('table[class="items"] tbody tr')
+        plantel = soup.select('table[class="items"] tbody tr')
 
-    def processar_dados(self, tipo="gols"):
-        """
-        Processa os dados do plantel com base no tipo de estatística escolhida.
-        :param tipo: Tipo de estatística ("gols", "assistencias", "amarelos", "vermelhos").
-        """
-        self.jogadores_data = []
+        indices_estatisticas = [7, 8, 9, 11]
+        jogadores_data = []
 
-        for jogador in self.plantel:
+        for jogador in plantel:
             dados_jogador = [td.text.strip() for td in jogador.find_all('td') if td.text.strip()]
 
             if len(dados_jogador) >= 12:
                 nome = dados_jogador[1]
-                sobreNome = dados_jogador[2].split()[-1].strip()
+                sobrenome = dados_jogador[2].split()[-1].strip()
                 posicao = dados_jogador[3]
                 jogos = int(dados_jogador[6]) if dados_jogador[6].isdigit() else 0
+                estatisticas = [int(dados_jogador[i].split()[0]) if dados_jogador[i].split()[0].isdigit() else 0 for i in indices_estatisticas]
 
-                if tipo == "gols":
-                    estatistica = int(dados_jogador[7].split()[0]) if dados_jogador[7].split()[0].isdigit() else 0
-                elif tipo == "assistencias":
-                    estatistica = int(dados_jogador[8].split()[0]) if dados_jogador[8].split()[0].isdigit() else 0
-                elif tipo == "amarelos":
-                    estatistica = int(dados_jogador[9].split()[0]) if dados_jogador[9].split()[0].isdigit() else 0
-                elif tipo == "vermelhos":
-                    estatistica = int(dados_jogador[11].split()[0]) if dados_jogador[11].split()[0].isdigit() else 0
-                else:
-                    estatistica = 0
-
-                # Correções para casos especiais
+                # Corrigindo nomes específicos
                 if dados_jogador[0] == "11":
                     nome = "Rodrygo"
-                    sobreNome = ""
+                    sobrenome = ""
                 if dados_jogador[1] == "JoseluJoseluCentroavante":
                     nome = "Joselu"
-                    sobreNome = ""
+                    sobrenome = ""
 
-                self.jogadores_data.append([f"{nome.split()[0]} {sobreNome}", posicao, jogos, estatistica])
-
-    def exibir_tabela(self, titulo, coluna_estatistica):
-        """
-        Exibe os dados processados em formato tabular.
-        :param titulo: Título da tabela.
-        :param coluna_estatistica: Nome da coluna que contém a estatística.
-        """
-        df = pd.DataFrame(self.jogadores_data, columns=["Jogador", "Posição", "Jogos", coluna_estatistica])
-        df = df.sort_values(by=coluna_estatistica, ascending=False).reset_index(drop=True)
-
-        print(f"\n{titulo}\n")
-        print(df.to_string(index=False))
-        print("\n" + "-" * 150)
+                jogadores_data.append([f"{nome.split()[0]} {sobrenome}", posicao, jogos, *estatisticas])
+        
+        return jogadores_data
 
 
-# URL e headers para requisição
-url = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/plus/1?reldata=SUC%262023"
-headers = {
+# Configurações
+URL = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/plus/1?reldata=ES1%262023"
+HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
 }
+DB_NAME = "dados_superCopa.db"
 
-# Inicializando a classe
-estatisticas = EstatisticasSupercopa(url, headers)
+# Instanciando as classes
+scraper = ScraperTransfermarkt(URL, HEADERS)
+dados = scraper.coletar_dados()
 
-# Obter dados da página
-estatisticas.obter_dados()
+banco = EstatisticasFutebol(DB_NAME)
+banco.inserir_dados(dados)
 
-# Processar e exibir tabelas
-estatisticas.processar_dados(tipo="gols")
-estatisticas.exibir_tabela("Artilharia do Clube - Supercopa da Espanha 2023/24", "Gols")
+# Consultando os dados
+print("\n\nArtilharia do Clube - La Liga 2023/24\n")
+df_gols = banco.consultar_dados("gols")
+print(df_gols.to_string(index=False))
 
-estatisticas.processar_dados(tipo="assistencias")
-estatisticas.exibir_tabela("Maiores Assistentes do Clube - Supercopa da Espanha 2023/24", "Assistencias")
+print("\n\nMaiores Assistentes do Clube - La Liga 2023/24\n")
+df_assistencias = banco.consultar_dados("assistencias")
+print(df_assistencias.to_string(index=False))
 
-estatisticas.processar_dados(tipo="amarelos")
-estatisticas.exibir_tabela("Cartões Amarelos do Clube - Supercopa da Espanha 2023/24", "Cartões Amarelos")
+print("\n\nCartões Amarelos do Clube - La Liga 2023/24\n")
+df_amarelos = banco.consultar_dados("cartoes_amarelos")
+print(df_amarelos.to_string(index=False))
 
-estatisticas.processar_dados(tipo="vermelhos")
-estatisticas.exibir_tabela("Cartões Vermelhos do Clube - Supercopa da Espanha 2023/24", "Cartões Vermelhos")
+print("\n\nCartões Vermelhos do Clube - La Liga 2023/24\n")
+df_vermelhos = banco.consultar_dados("cartoes_vermelhos")
+print(df_vermelhos.to_string(index=False))
+
+# Fechando a conexão com o banco
+banco.fechar_conexao()
