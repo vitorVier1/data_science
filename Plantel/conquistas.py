@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from prettytable import PrettyTable
+import pandas as pd
 
 class RealMadridSeasonStats:
     def __init__(self, url):
@@ -9,8 +9,10 @@ class RealMadridSeasonStats:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
         }
         self.soup = None
-        self.competitions_table = PrettyTable(field_names=["Competição", "Resultado"])
-        self.games_table = PrettyTable(field_names=["Jogos", "V", "E", "D"])
+
+        # DataFrames para armazenar os dados de competições e jogos
+        self.competitions_df = pd.DataFrame(columns=["Competição", "Resultado"])
+        self.games_df = pd.DataFrame(columns=["Jogos", "V", "E", "D"])
 
     def fetch_data(self):
         """Faz o scraping da página e cria o objeto BeautifulSoup."""
@@ -33,11 +35,13 @@ class RealMadridSeasonStats:
                     laLiga = dados_comp[2] if len(dados_comp) > 4 else "Campeão"
                     superCopa = dados_comp[3] if len(dados_comp) > 4 else "Campeão"
 
-                    # Adicionando dados à tabela
-                    self.competitions_table.add_row(["Copa do Rei", copaRei])
-                    self.competitions_table.add_row(["Liga dos Campeões", champions])
-                    self.competitions_table.add_row(["La Liga", laLiga])
-                    self.competitions_table.add_row(["Super Copa", superCopa])
+                    # Criando DataFrame temporário e concatenando com o DataFrame principal
+                    new_data = pd.DataFrame([["Copa do Rei", copaRei],
+                                             ["Liga dos Campeões", champions],
+                                             ["La Liga", laLiga],
+                                             ["Super Copa", superCopa]],
+                                            columns=["Competição", "Resultado"])
+                    self.competitions_df = pd.concat([self.competitions_df, new_data], ignore_index=True)
 
     def extract_games(self):
         """Extrai os dados de jogos da temporada."""
@@ -52,17 +56,18 @@ class RealMadridSeasonStats:
                     draws = jogos_stats[2].split('E')[0]
                     loses = jogos_stats[3].split('D')[0]
 
-                    # Adicionando dados à tabela
-                    self.games_table.add_row([jogos, wins, draws, loses])
+                    # Criando DataFrame temporário e concatenando com o DataFrame principal
+                    new_data = pd.DataFrame([[jogos, wins, draws, loses]], columns=["Jogos", "V", "E", "D"])
+                    self.games_df = pd.concat([self.games_df, new_data], ignore_index=True)
 
     def display_results(self):
         """Exibe os resultados das competições e dos jogos."""
         print("\nBalanço da Temporada 2023/24\n")
         print("Competições")
-        print(self.competitions_table)
+        print(self.competitions_df.to_string(index=False))  # Exibe a tabela de competições
         print("\n---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n")
         print("Jogos da Temporada")
-        print(self.games_table)
+        print(self.games_df.to_string(index=False))  # Exibe a tabela de jogos
 
 # Uso da classe
 if __name__ == "__main__":

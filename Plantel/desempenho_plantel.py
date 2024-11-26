@@ -1,8 +1,57 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import sqlite3
+
+class BancoDeDados:
+    """Classe para gerenciar a interação com o banco de dados SQLite."""
+    
+    def __init__(self, db_name):
+        self.db_name = db_name
+        self.conn = sqlite3.connect(self.db_name)
+        self.cursor = self.conn.cursor()
+        self._criar_tabela()
+
+    def _criar_tabela(self):
+        """Cria a tabela no banco de dados para armazenar as estatísticas dos jogadores."""
+        self.cursor.execute("""
+        CREATE TABLE IF NOT EXISTS estatisticas (
+            numero INTEGER,
+            nome TEXT,
+            posicao TEXT,
+            no_plantel TEXT,
+            jogos INTEGER,
+            gols INTEGER,
+            assistencias INTEGER,
+            amarelos INTEGER,
+            expulsao INTEGER,
+            vermelhos INTEGER,
+            ppj REAL,
+            minutos_jogados INTEGER
+        )
+        """)
+        self.conn.commit()
+
+    def inserir_dados(self, jogadores_data):
+        """Insere os dados dos jogadores no banco de dados."""
+        self.cursor.executemany("""
+        INSERT INTO estatisticas (numero, nome, posicao, no_plantel, jogos, gols, assistencias, amarelos, expulsao, vermelhos, ppj, minutos_jogados)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, jogadores_data)
+        self.conn.commit()
+
+    def consultar_dados(self):
+        """Consulta os dados no banco de dados e retorna como um DataFrame."""
+        query = "SELECT * FROM estatisticas"
+        return pd.read_sql_query(query, self.conn)
+
+    def fechar(self):
+        """Fecha a conexão com o banco de dados."""
+        self.conn.close()
 
 class RealMadridStats:
+    """Classe para coletar e processar estatísticas do Real Madrid."""
+    
     def __init__(self, url):
         self.url = url
         self.headers = {
@@ -53,7 +102,7 @@ class RealMadridStats:
 
     def create_dataframe(self):
         """Cria um DataFrame com os dados coletados."""
-        return pd.DataFrame(self.jogadores_data, columns=[
+        return pd.DataFrame(self.jogadores_data, columns=[ 
             "Numero", "Nome", "Posicao", "No Plantel", "Jogos", "Gols", "Assistencias", "Amarelos", 
             "Expulsões (2 Amarelos)", "Vermelhos", "PPJ", "Minutos Jogados"
         ])
@@ -61,15 +110,33 @@ class RealMadridStats:
     def display_stats(self):
         """Exibe as estatísticas gerais do plantel."""
         df_jogadores = self.create_dataframe()
-        print("\n\n\nEstatisticas Gerais do Plantel na Temporada 2023/24\n")
+        print("\n\n\nEstatísticas Gerais do Plantel na Temporada 2023/24\n")
         print(df_jogadores.to_string(index=False))
+
+    def store_data_in_db(self, db_name):
+        """Armazena os dados no banco de dados SQLite."""
+        banco = BancoDeDados(db_name)
+        banco.inserir_dados(self.jogadores_data)
+        banco.fechar()
 
 
 # Exemplo de uso:
 url = "https://www.transfermarkt.com.br/real-madrid-cf/leistungsdaten/verein/418/reldata/%262023/plus/1"
+db_name = "desempenho.db"
 
 # Instancia a classe e coleta os dados
 real_madrid_stats = RealMadridStats(url)
 real_madrid_stats.fetch_data()  # Coleta os dados da página
 real_madrid_stats.collect_player_stats()  # Coleta as estatísticas dos jogadores
-real_madrid_stats.display_stats()  # Exibe as estatísticas na forma de tabela
+
+# Armazenar no banco de dados
+real_madrid_stats.store_data_in_db(db_name)
+
+# Consultar os dados no banco e exibir
+banco = BancoDeDados(db_name)
+df_jogadores_db = banco.consultar_dados()
+print("\nDados Armazenados no Banco de Dados:")
+print(df_jogadores_db.to_string(index=False))
+
+# Fechar o banco de dados
+banco.fechar()
