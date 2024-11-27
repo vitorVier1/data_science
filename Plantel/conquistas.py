@@ -24,7 +24,7 @@ class RealMadridSeasonStats:
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS competicoes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            competencia TEXT NOT NULL,
+            competencia TEXT NOT NULL UNIQUE,
             resultado TEXT NOT NULL
         )
         """)
@@ -32,7 +32,7 @@ class RealMadridSeasonStats:
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS jogos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            jogos TEXT NOT NULL,
+            jogos TEXT NOT NULL UNIQUE,
             v INTEGER NOT NULL,
             e INTEGER NOT NULL,
             d INTEGER NOT NULL
@@ -61,13 +61,13 @@ class RealMadridSeasonStats:
                     superCopa = dados_comp[3] if len(dados_comp) > 4 else "Campeão"
 
                     # Inserindo os dados na tabela competicoes
-                    self.cursor.execute("INSERT INTO competicoes (competencia, resultado) VALUES (?, ?)", 
+                    self.cursor.execute("INSERT OR IGNORE INTO competicoes (competencia, resultado) VALUES (?, ?)", 
                                         ("Copa do Rei", copaRei))
-                    self.cursor.execute("INSERT INTO competicoes (competencia, resultado) VALUES (?, ?)", 
+                    self.cursor.execute("INSERT OR IGNORE INTO competicoes (competencia, resultado) VALUES (?, ?)", 
                                         ("Liga dos Campeões", champions))
-                    self.cursor.execute("INSERT INTO competicoes (competencia, resultado) VALUES (?, ?)", 
+                    self.cursor.execute("INSERT OR IGNORE INTO competicoes (competencia, resultado) VALUES (?, ?)", 
                                         ("La Liga", laLiga))
-                    self.cursor.execute("INSERT INTO competicoes (competencia, resultado) VALUES (?, ?)", 
+                    self.cursor.execute("INSERT OR IGNORE INTO competicoes (competencia, resultado) VALUES (?, ?)", 
                                         ("Super Copa", superCopa))
                     
             self.conn.commit()
@@ -88,7 +88,7 @@ class RealMadridSeasonStats:
                     loses = jogos_stats[3].split('D')[0]
 
                     # Inserindo os dados na tabela jogos
-                    self.cursor.execute("INSERT INTO jogos (jogos, v, e, d) VALUES (?, ?, ?, ?)", 
+                    self.cursor.execute("INSERT OR IGNORE INTO jogos (jogos, v, e, d) VALUES (?, ?, ?, ?)", 
                                         (jogos, wins, draws, loses))
 
             self.conn.commit()

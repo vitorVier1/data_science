@@ -20,13 +20,14 @@ class EstatisticasClube:
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS estatisticas_clube (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            jogador TEXT,
-            posicao TEXT,
-            jogos INTEGER,
-            gols INTEGER,
-            assistencias INTEGER,
-            amarelos INTEGER,
-            vermelhos INTEGER
+            jogador TEXT NOT NULL,
+            posicao TEXT NOT NULL,
+            jogos INTEGER NOT NULL,
+            gols INTEGER NOT NULL,
+            assistencias INTEGER NOT NULL,
+            amarelos INTEGER NOT NULL,
+            vermelhos INTEGER NOT NULL,
+            UNIQUE (jogador, posicao, jogos, gols, assistencias, amarelos, vermelhos)
         )
         """)
         self.conexao.commit()
@@ -63,10 +64,9 @@ class EstatisticasClube:
 
     def salvar_dados(self, jogadores_data):
         cursor = self.conexao.cursor()
-        cursor.execute("DELETE FROM estatisticas_clube")  # Limpa os dados antigos
         for linha in jogadores_data:
             cursor.execute("""
-            INSERT INTO estatisticas_clube (jogador, posicao, jogos, gols, assistencias, amarelos, vermelhos)
+            INSERT OR IGNORE INTO estatisticas_clube (jogador, posicao, jogos, gols, assistencias, amarelos, vermelhos)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """, linha)
         self.conexao.commit()

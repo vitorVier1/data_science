@@ -20,7 +20,8 @@ class EstatisticasFutebol:
             gols INTEGER,
             assistencias INTEGER,
             cartoes_amarelos INTEGER,
-            cartoes_vermelhos INTEGER
+            cartoes_vermelhos INTEGER,
+            UNIQUE(jogador, posicao) ON CONFLICT IGNORE
         )
         """)
         self.conn.commit()
@@ -30,7 +31,7 @@ class EstatisticasFutebol:
         for jogador in jogadores_data:
             jogador_nome, posicao, jogos, gols, assistencias, amarelos, vermelhos = jogador
             self.cursor.execute("""
-                INSERT INTO estatisticas (jogador, posicao, jogos, gols, assistencias, cartoes_amarelos, cartoes_vermelhos)
+                INSERT OR IGNORE INTO estatisticas (jogador, posicao, jogos, gols, assistencias, cartoes_amarelos, cartoes_vermelhos)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (jogador_nome, posicao, jogos, gols, assistencias, amarelos, vermelhos))
         self.conn.commit()

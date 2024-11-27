@@ -6,7 +6,7 @@ import sqlite3
 
 class BancoDeDados:
     """Gerencia o banco de dados para armazenar estatísticas de futebol."""
-    
+
     def __init__(self, db_name):
         self.db_name = db_name
         self.conn = sqlite3.connect(self.db_name)
@@ -23,7 +23,8 @@ class BancoDeDados:
             gols INTEGER,
             assistencias INTEGER,
             cartoes_amarelos INTEGER,
-            cartoes_vermelhos INTEGER
+            cartoes_vermelhos INTEGER,
+            UNIQUE (jogador, posicao, jogos, gols, assistencias, cartoes_amarelos, cartoes_vermelhos)
         )
         """)
         self.conn.commit()
@@ -31,7 +32,7 @@ class BancoDeDados:
     def inserir_dados(self, jogadores_data):
         """Insere os dados dos jogadores no banco."""
         self.cursor.executemany("""
-            INSERT INTO estatisticas (jogador, posicao, jogos, gols, assistencias, cartoes_amarelos, cartoes_vermelhos)
+            INSERT OR IGNORE INTO estatisticas (jogador, posicao, jogos, gols, assistencias, cartoes_amarelos, cartoes_vermelhos)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, jogadores_data)
         self.conn.commit()
@@ -48,7 +49,7 @@ class BancoDeDados:
 
 class ScraperTransfermarkt:
     """Gerencia o scraping de dados do site Transfermarkt."""
-    
+
     def __init__(self, url, headers):
         self.url = url
         self.headers = headers
@@ -93,7 +94,7 @@ class ScraperTransfermarkt:
 
 class EstatisticasManager:
     """Gerencia todo o processo de scraping e manipulação do banco de dados."""
-    
+
     def __init__(self, url, headers, db_name):
         self.scraper = ScraperTransfermarkt(url, headers)
         self.banco = BancoDeDados(db_name)

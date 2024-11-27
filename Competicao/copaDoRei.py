@@ -29,7 +29,8 @@ class EstatisticasCopaDoRei:
                     gols INTEGER,
                     assistencias INTEGER,
                     amarelos INTEGER,
-                    vermelhos INTEGER
+                    vermelhos INTEGER,
+                    UNIQUE (nome, posicao, jogos, gols, assistencias, amarelos, vermelhos)
                 )
             """)
             conn.commit()
@@ -39,7 +40,7 @@ class EstatisticasCopaDoRei:
         with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.executemany("""
-                INSERT INTO jogadores (nome, posicao, jogos, gols, assistencias, amarelos, vermelhos)
+                INSERT OR IGNORE INTO jogadores (nome, posicao, jogos, gols, assistencias, amarelos, vermelhos)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, dados)
             conn.commit()
@@ -51,7 +52,7 @@ class EstatisticasCopaDoRei:
 
         for jogador in plantel:
             dados_jogador = [td.text.strip() for td in jogador.find_all('td') if td.text.strip()]
-            
+
             if len(dados_jogador) >= 12:
                 nome = dados_jogador[1]
                 sobrenome = dados_jogador[2].split()[-1].strip()

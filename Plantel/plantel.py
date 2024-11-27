@@ -23,26 +23,27 @@ class BancoDeDados:
             pe TEXT,
             idade TEXT,
             nacionalidade TEXT,
-            valor TEXT
+            valor TEXT,
+            UNIQUE(numero, nome)  -- Garante que não haverá duplicatas baseadas em número e nome
         )
         """)
         self.conn.commit()
 
     def inserir_jogadores(self, dados):
-        """Insere os dados dos jogadores no banco de dados."""
+        """Insere os dados dos jogadores no banco de dados, ignorando duplicatas."""    
         self.cursor.executemany("""
-            INSERT INTO plantel (numero, nome, posicao, altura, pe, idade, nacionalidade, valor)
+            INSERT OR IGNORE INTO plantel (numero, nome, posicao, altura, pe, idade, nacionalidade, valor)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, dados)
         self.conn.commit()
 
     def consultar_jogadores(self):
-        """Consulta os dados dos jogadores no banco de dados."""
+        """Consulta os dados dos jogadores no banco de dados."""    
         query = "SELECT * FROM plantel"
         return pd.read_sql_query(query, self.conn)
 
     def fechar(self):
-        """Fecha a conexão com o banco de dados."""
+        """Fecha a conexão com o banco de dados."""    
         self.conn.close()
 
 
@@ -86,12 +87,12 @@ class ScraperTransfermarkt:
                 # Coletando as nacionalidades a partir das imagens
                 nacionalidade_imgs = jogador.select('td img[alt]')
                 if len(nacionalidade_imgs) > 1:
-                    nacionalidade = nacionalidade_imgs[0]['alt']
-                    if len(nacionalidade_imgs) > 2:
-                        nacionalidade2 = nacionalidade_imgs[1]['alt']
+                    nacionalidade = nacionalidade_imgs[1]['alt']
+                    if len(nacionalidade_imgs) > 4:
+                        nacionalidade2 = nacionalidade_imgs[2]['alt']
                         nacionalidade = f"{nacionalidade}/{nacionalidade2}"
                     else:
-                        nacionalidade = nacionalidade_imgs[0]['alt']
+                        nacionalidade = nacionalidade_imgs[1]['alt']
                 else:
                     nacionalidade = ""
 
@@ -120,7 +121,7 @@ class EstatisticasManager:
         self.banco = BancoDeDados(db_name)
 
     def executar(self):
-        """Executa o processo completo: coleta, armazena e exibe os dados."""
+        """Executa o processo completo: coleta, armazena e exibe os dados."""    
         # Coletando os dados
         dados_jogadores = self.scraper.coletar_dados()
 
@@ -134,7 +135,7 @@ class EstatisticasManager:
         self.banco.fechar()
 
     def _exibir_resultados(self):
-        """Exibe os dados dos jogadores coletados do banco de dados."""
+        """Exibe os dados dos jogadores coletados do banco de dados."""    
         print("\n\n\nPlantel Real Madrid - Temporada 2023/24\n")
         
         # Consultando os dados do banco
