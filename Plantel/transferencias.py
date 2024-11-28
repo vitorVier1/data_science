@@ -13,7 +13,7 @@ class BancoDeDados:
         self._criar_tabelas()
 
     def _criar_tabelas(self):
-        """Cria as tabelas para armazenar as transferências de entrada e saída."""
+        """Cria as tabelas para armazenar as transferências de entrada e saída com restrição de unicidade."""
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS transferencias_entrada (
             jogador TEXT,
@@ -22,7 +22,8 @@ class BancoDeDados:
             nacionalidade TEXT,
             origem TEXT,
             valor_da_epoca TEXT,
-            valor_pago TEXT
+            valor_pago TEXT,
+            UNIQUE (jogador, posicao, idade, nacionalidade, origem, valor_da_epoca, valor_pago)
         )
         """)
         self.cursor.execute("""
@@ -33,21 +34,22 @@ class BancoDeDados:
             nacionalidade TEXT,
             destino TEXT,
             valor_da_epoca TEXT,
-            valor_pago TEXT
+            valor_pago TEXT,
+            UNIQUE (jogador, posicao, idade, nacionalidade, destino, valor_da_epoca, valor_pago)
         )
         """)
         self.conn.commit()
 
     def inserir_transferencias(self, tabela, dados):
-        """Insere os dados de transferências no banco de dados."""
+        """Insere os dados de transferências no banco de dados, ignorando duplicatas."""
         if tabela == 'entrada':
             self.cursor.executemany("""
-                INSERT INTO transferencias_entrada (jogador, posicao, idade, nacionalidade, origem, valor_da_epoca, valor_pago)
+                INSERT OR IGNORE INTO transferencias_entrada (jogador, posicao, idade, nacionalidade, origem, valor_da_epoca, valor_pago)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, dados)
         elif tabela == 'saida':
             self.cursor.executemany("""
-                INSERT INTO transferencias_saida (jogador, posicao, idade, nacionalidade, destino, valor_da_epoca, valor_pago)
+                INSERT OR IGNORE INTO transferencias_saida (jogador, posicao, idade, nacionalidade, destino, valor_da_epoca, valor_pago)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, dados)
         self.conn.commit()
@@ -119,7 +121,7 @@ class TransferenciasManager:
         self.banco = BancoDeDados(db_name)
 
     def executar(self):
-        """Executa o processo completo: coleta, armazena e exibe as transferências."""
+        """Executa o processo completo: coleta, armazena e exibe as transferências.""" 
         # Coletando as transferências de entrada
         transferencias_entrada = self.scraper_entrada.coletar_transferencias('entrada')
         # Coletando as transferências de saída
