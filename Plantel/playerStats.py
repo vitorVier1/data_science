@@ -71,7 +71,7 @@ class ScraperTransfermarkt:
         for jogador in plantel:
             dados_jogador = [td.text.strip() for td in jogador.find_all('td') if td.text.strip()]
 
-            if len(dados_jogador) >= 12:  # Verifica se há dados suficientes
+            if len(dados_jogador) >= 15:  # Verifica se há dados suficientes
                 num = dados_jogador[0]
                 nome = dados_jogador[1].split()[0]  # Nome curto
                 sobreNome = dados_jogador[2].split()[-1].strip()  # Nome curto
@@ -83,8 +83,8 @@ class ScraperTransfermarkt:
                 amarelos = dados_jogador[9]
                 expulsao_duplo_amarelo = dados_jogador[10]
                 vermelhos = dados_jogador[11]
-                ppj = dados_jogador[12]
-                minutos_jogados = dados_jogador[13]
+                ppj = dados_jogador[14]
+                minutos_jogados = dados_jogador[15]
 
                 # Correção para casos específicos de nomes de jogadores
                 if dados_jogador[0] == "11":
